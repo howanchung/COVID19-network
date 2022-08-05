@@ -66,7 +66,7 @@ ggplot(data = contact_pattern, aes(x = day)) +
     annotate("rect", xmin = as.Date('2020-01-08') + 16,
              xmax = as.Date('2020-01-08') + 33, ymin = 0, ymax = Inf, alpha = .2) +
     annotate('text', x = as.Date('2020-01-08') + 25,
-             y = 25, size = 8, label = "Lock-down period", family = FONTS) +
+             y = 25, size = 8, label = "Period with the highest-level alert", family = FONTS) +
     scale_x_date(breaks = c(0, 16, 33, 63) + as.Date('2020-01-08'), date_labels = "%b %d") +
     labs(x = 'Day', y = 'Average number of social contacts', color = 'Age group') +
     theme_bw() +
@@ -762,7 +762,7 @@ pa <- ggplot() +
     geom_vline(xintercept = as.Date('2020-01-24'), linetype = "dashed",
                color = "black", size = 1.5) +
     annotate('text', x = as.Date('2020-01-24'),
-             y = 25, size = 10, label = "Lock-down", family = FONTS) +
+             y = 25, size = 10, label = "Annoucement of the highest-level response", family = FONTS) +
     theme_bw() +
     labs(x = 'Date', y = 'Average removal period') +
     #scale_color_discrete("Period:", labels = c('I', "II")) +
@@ -801,7 +801,7 @@ pb <- ggplot() +
     geom_vline(xintercept = as.Date('2020-01-24'), linetype = "dashed",
                color = "black", size = 1.5) +
     annotate('text', x = as.Date('2020-01-24'),
-             y = 45, size = 10, label = "Lock-down", family = FONTS) +
+             y = 45, size = 10, label = "Annoucement of the highest-level response", family = FONTS) +
     theme_bw() +
     labs(x = 'Date', y = 'Number of imported cases') +
     #scale_color_discrete("Period:", labels = c('I', "II")) +

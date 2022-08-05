@@ -22,6 +22,7 @@ library(forcats)
 library(dplyr)
 library(arrow)
 library(Cairo)
+library(funtimes)
 loadfonts()
 
 TIME_CUT <- '2020-01-23'
@@ -417,7 +418,7 @@ tmp <- simulation_summary_graph_total[Measures %in% c("Percentage of infection",
                                                       "Proportion within household",
                                                       "Effective reproduction numbers")]
 tmp[, Measures := factor(Measures, levels = unique(Measures),
-                         labels = c('A: Perentage of infection',
+                         labels = c('A: Percentage of infection',
                                     'B: Number of the new-onset',
                                     'C: Proportion within household',
                                     'D: Effective reproduction numbers'))]
@@ -436,7 +437,7 @@ linetypes <- c('solid', 'dotted', 'solid', 'dotted', 'solid', 'dotted', 'solid')
 
 ggplot(data = tmp, aes(color = scenario, linetype = scenario)) +
   geom_line(aes(x = day, y = median), size = 1.2) +
-  geom_ribbon(aes(x=day, ymin=min, ymax=max, fill = scenario), alpha=.3) +
+  # geom_ribbon(aes(x=day, ymin=min, ymax=max, fill = scenario), alpha=.3) +
   annotate("rect", xmin = 16, xmax = 32, ymin = -Inf, ymax = Inf,
            alpha = .2) +
   facet_wrap_custom(~Measures, ncol = 2, scale = 'free_y',
@@ -466,6 +467,7 @@ ggplot(data = tmp, aes(color = scenario, linetype = scenario)) +
         axis.title.y = element_blank(),
         panel.border = element_rect(size = 1.1),
         legend.key.width = unit(3.5, "line"))
+ggsave(filename = 'figure1/Figure51.pdf', width = 12, height = 10, device=cairo_pdf)
 ggsave(filename = 'figure1/FigureS51.pdf', width = 12, height = 10, device=cairo_pdf)
 ######################
 tmp <- simulation_summary_graph_total[Measures %in% c("Average outdegree", 
