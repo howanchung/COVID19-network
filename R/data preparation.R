@@ -1,16 +1,3 @@
-library(ggplot2)
-library(ggsci)
-library(forcats)
-library(data.table)
-library(extrafont)
-library(ggpubr)
-library(viridis)
-library(GGally)
-library(network)
-library(dplyr)
-library(latex2exp)
-library(arrow)
-
 ##
 COVID19 <- data.table(readxl::read_excel('data/COVID19.xlsx'))
 COVID19$onset_date <- as.Date(COVID19$onset_date) + 1
@@ -34,7 +21,7 @@ import_cases$import_date <- import_cases$import_date - as.Date('2020-01-08')
 write.csv(import_cases, "data/import_cases.csv")
 
 ######################COVID19 observed network preparation##########################
-set.seed(2021)
+set.seed(seed)
 COVID19$parent <- apply(COVID19, MARGIN = 1, FUN = sample_parent)
 COVID19_CJ <- CJ(id1 = COVID19$id2, id2 = COVID19$id2)
 

@@ -4,7 +4,91 @@
 # Created on: 2021/6/13
 
 ####################################################################################################
+t_test_by_stat <- function(mu, sd, n, alternative = 'two.sided', conf.level=0.95){
+  if (equal_var_test(sd, n) <= 1 - conf.level){
+    pool_se <- sqrt(sd[1] ** 2 / n[1] + sd[2] ** 2 / n[2])
+    df <- pool_se ** 4 / (sd[1] ** 4 / n[1] ** 2 / (n[1] - 1) + sd[2] ** 4 / n[2] ** 2 / (n[2] - 1))
+  }else{
+    pool_se <- sqrt(((n[1] - 1) * sd[1] ** 2 + (n[2] - 1) * sd[2] ** 2) / (n[1] + n[2] - 2)) * sqrt(sum(1 / n))
+    df <- sum(n) - 2
+  }
+  
+  if (pool_se == 0){
+    return(0.0)
+  }
+  t_stat <- (mu[1] - mu[2]) / pool_se
+  if (alternative == "two.sided"){
+    p_val <- 2 * min(pt(t_stat, df), 1 - pt(t_stat, df))
+  }else if (alternative == "greater"){
+    p_val <- 1 - pt(t_stat, df)
+  }else if (alternative == "less"){
+    p_val <- pt(t_stat, df)
+  }else{
+    stop("Incorrect alternative")
+  }
+  return(p_val)
+}
+
+equal_var_test <- function(sd, n){
+  variance <- sd ** 2
+  f_stat <-  variance[1] / variance[2]
+  tmp <- pf(f_stat, n[1] - 1, n[2] - 1)
+  p <- 2 * min(tmp, 1 - tmp)
+  return(p)
+}
+
+boot_t_test <- function(mu, se, n, alternative = 'two.sided'){
+  # mean_x = N(mu[1], se[1])
+  # mean_y = N(mu[2], se[2])
+  # (mean_x - mean_y) / sqrt(se[1] + se[2]) = N(0, 1) under H0
+  pool_se <- sqrt(sum(se ** 2))
+  t_stat <- (mu[1] - mu[2]) / pool_se
+  df <- sum(n) - 2
+  if (alternative == "two.sided"){
+    p_val <- 2 * min(pt(t_stat, df), 1 - pt(t_stat, df))
+  }else if (alternative == "greater"){
+    p_val <- 1 - pt(t_stat, df)
+  }else if (alternative == "less"){
+    p_val <- pt(t_stat, df)
+  }else{
+    stop("Incorrect alternative")
+  }
+  return(list(estimate=mu, p.value=p_val))
+}
+
+resample_by_cluster <- function(net_obj, seed=1234){
+  set.seed(seed)
+  cluster_list <- igraph::decompose(intergraph::asIgraph(net_obj))
+  cluster_list <- cluster_list[sapply(cluster_list, igraph::vcount) > 1]
+  n_cluster <- length(cluster_list)
+  cluster_id <- sort(sample(1:n_cluster, size=n_cluster, replace=TRUE))
+  cluster_resample <- cluster_list[cluster_id]
+  return(intergraph::asNetwork(igraph::disjoint_union(cluster_resample)))
+}
+
+resample_by_cluster_pool <- function(cluster_list1, cluster_list2, seed=1234){
+  set.seed(seed)
+  cluster_list <- c(cluster_list1, cluster_list2)
+  id <- 1:length(cluster_list)
+  cluster_resample1 <- cluster_list[sort(sample(id, size=length(cluster_list1), replace=TRUE))]
+  cluster_resample2 <- cluster_list[sort(sample(id, size=length(cluster_list2), replace=TRUE))]
+  network_resample1 <- intergraph::asNetwork(igraph::disjoint_union(cluster_resample1))
+  network_resample2 <- intergraph::asNetwork(igraph::disjoint_union(cluster_resample2))
+  return(list(network_resample1, network_resample2))
+}
+
 bootMean <- function(data, indices) mean(data[indices])
+
+
+bootMean2 <- function(seed, net_obj, resample_func, attribute_func){
+  net_resample <- resample_func(net_obj, seed=seed)
+  return(mean(attribute_func(net_resample)))
+}
+
+bootMean3 <- function(seed, net_obj, resample_func, attribute_func){
+  net_resample <- resample_func(net_obj, seed=seed)
+  return(attribute_func(net_resample))
+}
 
 `%fin%` <- function(x, table) {
     fastmatch::fmatch(x, table, nomatch = 0L) > 0L

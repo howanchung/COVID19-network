@@ -701,7 +701,7 @@ p4 <- ggplot(diam_dist, aes(x = fct_inorder(diam), y = prop, fill = period)) +
           axis.title.y = element_blank(),
           panel.border = element_rect(size = 1.1))
 
-expr <- p_value_expr(test_results[measures == "cluster size", p_value])
+expr <- p_value_expr(test_results[measures == "cluster_size", p_value])
 p5 <- ggplot(size_dist, aes(x = fct_inorder(size), y = prop, fill = period)) +
     geom_bar(stat = 'identity', position = position_dodge(0.9)) +
     geom_text(aes(label = scales::percent(prop, accuracy = 0.1), y = prop),

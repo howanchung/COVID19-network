@@ -23,16 +23,21 @@ library(dplyr)
 library(arrow)
 library(Cairo)
 library(funtimes)
+library(ggsci)
+library(forcats)
+library(extrafont)
+library(latex2exp)
 loadfonts()
 
 TIME_CUT <- '2020-01-23'
 FONTS <- 'STSong'
 AGE_LABEL <- c('0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '>=60')
 
+seed <- 2021
 source('R/utils.R')
 source('R/facet_wrap_custom.R')
 source("R/data preparation.R")
-source("R/statistical test.R")
+source("R/statistical_test_new.R")
 test_results
 
 ####################COVID19 observed network visualization#########################
@@ -88,90 +93,39 @@ ggsave(filename = 'figure/Figure2.pdf', width = 16, height = 12, device=cairo_pd
 
 
 #######
-in_degree <- sna::degree(net, cmode = 'indegree')
-out_degree <- sna::degree(net, cmode = 'outdegree')
-nonsingletons <- which(in_degree != 0 | out_degree != 0)
-mean(out_degree[nonsingletons])
-
-
-degree_period <- data.table(id = 1:1349, out_degree = out_degree)
-degree_period[, period := 2]
-degree_period[id %in% (1:1349)[COVID19$origin_time <= TIME_CUT], period := 1]
-degree_period <- degree_period[id %in% nonsingletons]
-
-degree_period %>%
-    group_by(period) %>%
-    summarise(mean_outdegree = mean(out_degree))
 
 
 ########
-set.seed(2021)
-degree_ci1 <- boot.ci(boot(degree_period[period == 1, out_degree], bootMean, R = 10000), type = "perc")
-set.seed(2021)
-degree_ci2 <- boot.ci(boot(degree_period[period == 2, out_degree], bootMean, R = 10000), type = "perc")
 
 degree_error <- data.table(group = c("I", "II"),
-                           value = c(degree_ci1$t0, degree_ci2$t0),
-                           low = c(degree_ci1$percent[4], degree_ci2$percent[4]),
-                           upper = c(degree_ci1$percent[5], degree_ci2$percent[5]))
+                           value = mean_outdegree,
+                           low = c(period1_ci_degree$percent[4], period2_ci_degree$percent[4]),
+                           upper = c(period1_ci_degree$percent[5], period2_ci_degree$percent[5]))
 degree_error
 ########
-set.seed(2021)
-degree_ci1 <- boot.ci(boot(dist_period[period == 1, dist], bootMean, R = 10000), type = "perc")
-set.seed(2021)
-degree_ci2 <- boot.ci(boot(dist_period[period == 2, dist], bootMean, R = 10000), type = "perc")
-
 dist_error <- data.table(group = c("I", "II"),
-                         value = c(degree_ci1$t0, degree_ci2$t0),
-                         low = c(degree_ci1$percent[4], degree_ci2$percent[4]),
-                         upper = c(degree_ci1$percent[5], degree_ci2$percent[5]))
-
+                         value = mean_dist,
+                         low = c(period1_ci_distance$percent[4], period2_ci_distance$percent[4]),
+                         upper = c(period1_ci_distance$percent[5], period2_ci_distance$percent[5]))
+dist_error
 ########
-set.seed(2021)
-degree_ci1 <- boot.ci(boot(betw_period[period == 1, betw], bootMean, R = 10000), type = "perc")
-set.seed(2021)
-degree_ci2 <- boot.ci(boot(betw_period[period == 2, betw], bootMean, R = 10000), type = "perc")
-
 betw_error <- data.table(group = c("I", "II"),
-                         value = c(degree_ci1$t0, degree_ci2$t0),
-                         low = c(degree_ci1$percent[4], degree_ci2$percent[4]),
-                         upper = c(degree_ci1$percent[5], degree_ci2$percent[5]))
+                         value = mean_betw,
+                         low = c(period1_ci_betw$percent[4], period2_ci_betw$percent[4]),
+                         upper = c(period1_ci_betw$percent[5], period2_ci_betw$percent[5]))
 betw_error
 ##########################
-
-set.seed(2021)
-degree_ci1 <- boot.ci(boot(diam_period[period == 1, dist], bootMean, R = 10000), type = "perc")
-set.seed(2021)
-degree_ci2 <- boot.ci(boot(diam_period[period == 2, dist], bootMean, R = 10000), type = "perc")
-
 diam_error <- data.table(group = c("I", "II"),
-                         value = c(degree_ci1$t0, degree_ci2$t0),
-                         low = c(degree_ci1$percent[4], degree_ci2$percent[4]),
-                         upper = c(degree_ci1$percent[5], degree_ci2$percent[5]))
+                         value = mean_diameter,
+                         low = c(period1_ci_diameter$percent[4], period2_ci_diameter$percent[4]),
+                         upper = c(period1_ci_diameter$percent[5], period2_ci_diameter$percent[5]))
 
 ######################
-set.seed(2021)
-degree_ci1 <- boot.ci(boot(size_period[period == 1, dist], bootMean, R = 10000), type = "perc")
-set.seed(2021)
-degree_ci2 <- boot.ci(boot(size_period[period == 2, dist], bootMean, R = 10000), type = "perc")
-
 size_error <- data.table(group = c("I", "II"),
-                         value = c(degree_ci1$t0, degree_ci2$t0),
-                         low = c(degree_ci1$percent[4], degree_ci2$percent[4]),
-                         upper = c(degree_ci1$percent[5], degree_ci2$percent[5]))
-
-
-######## CI for totals
-set.seed(2021)
-boot.ci(boot(degree_period$out_degree, bootMean, R = 10000), type = "perc")
-set.seed(2021)
-boot.ci(boot(dist_period$dist, bootMean, R = 10000), type = "perc")
-set.seed(2021)
-boot.ci(boot(betw_period$betw, bootMean, R = 10000), type = "perc")
-set.seed(2021)
-boot.ci(boot(diam_period$dist, bootMean, R = 10000), type = "perc")
-set.seed(2021)
-boot.ci(boot(size_period$dist, bootMean, R = 10000), type = "perc")
+                         value = mean_size,
+                         low = c(period1_ci_size$percent[4], period2_ci_size$percent[4]),
+                         upper = c(period1_ci_size$percent[5], period2_ci_size$percent[5]))
+size_error
 
 ######################
 
@@ -229,11 +183,11 @@ p_betw_error <- ggplot(betw_error) +
     # scale_fill_jama() + 
     geom_errorbar(aes(x = group, ymin = low, ymax = upper), width = .2,
                   position = position_dodge(.9)) +
-    annotate('text', x = 1.5, y = 0.97, size = 9, label = expr,
+    annotate('text', x = 1.5, y = 1.164, size = 9, label = expr,
              fontface = 'italic', family = FONTS) +
-    scale_y_continuous(breaks = seq(0, 1, 0.25),
+    scale_y_continuous(breaks = seq(0, 1.2, 0.3),
                        labels = scales::number_format(accuracy = 0.01),
-                       limits = c(0, 1)) +
+                       limits = c(0, 1.2)) +
     labs(x = 'Period', y = 'Average betweenness') +
     guides(fill = guide_legend(title = 'Period')) +
     theme_bw() +
